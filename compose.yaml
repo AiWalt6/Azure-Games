@@ -1,0 +1,36 @@
+services:
+  game:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PUBLIC_ORIGIN: https://${DOMAIN:?Set DOMAIN to your public hostname}
+      TRUST_PROXY: "1"
+    volumes:
+      - game-data:/app/data
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN to your public hostname}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - game
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  game-data:
+  caddy-data:
+  caddy-config:
